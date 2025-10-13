@@ -1,7 +1,87 @@
-# -crazy
 
-A creative experimental repository for testing and development purposes.
+# 시골길 통합 지능 운영체계
 
-## Overview
+**시골길**은 GitHub Copilot 에이전트를 기반으로 한 통합 지능 운영체계입니다. 이 프로젝트는 다양한 모듈을 통합하여 명령 체계, 자원 할당, 실행 엔진, 데이터 보안, 그리고 프로젝트 실행을 관리하는 프레임워크를 제공합니다. 시스템은 결정론적 알고리즘과 환경 독립성을 바탕으로, 어떠한 환경에서도 동일한 결과를 보장하도록 설계되었습니다.
 
-This repository serves as a sandbox for exploring various development concepts and ideas.
+## 특징
+
+- **모듈화된 설계:**  
+  - **지시사항 관리 (Directive):** 각 지시사항은 고유한 ID를 갖고 있으며, 체계적으로 분류(Foundation, Operation, Project, Security)되어 있습니다.
+  - **자원 할당 (Resource Allocation):** 작업 유형에 따른 자원(메모리, 계산, 휴식, 유지 보수) 분배 기능.
+  - **4단계 성찰 후 실행 (Execution Engine):** 맥락 분석, 피드백 수집, 위험 평가 및 실행 계획 수립을 통한 결정적 실행.
+  - **데이터 보호 및 보안 (Security Protocol):** 해시 처리, 로그 암호화 및 이상 감지를 통한 데이터 무결성 보장.
+  - **프로젝트 실행 (Project Executor):** 메타 컴퍼니 창립, 의료 연구 및 게임 개발 등 다양한 프로젝트 관리 기능.
+
+- **결정론적 알고리즘:**  
+  모든 수학적 연산은 순수 함수로 구현되어 동일 입력에 대해 일관된 결과를 보장합니다.
+
+- **환경 독립성:**  
+  파일 시스템 접근 추상화, 테스트용 모의 시간 사용, 외부 API 호출 격리 등으로 어느 환경에서도 동일하게 작동합니다.
+
+## 시스템 구성
+
+- **SigolImperialAgent:**  
+  통합 에이전트 메인 클래스. 지시사항를 로드하고, 각 모듈(자원 할당, 실행 엔진, 보안 체계, 프로젝트 실행)을 통합 관리합니다.
+
+- **SigolResourceAllocator:**  
+  작업 유형에 따른 자원 할당 최적화를 제공합니다.
+
+- **SigolExecutionEngine:**  
+  4단계 성찰 후 실행 시스템으로, 지시사항의 맥락 분석, 피드백 수집, 위험 평가, 실행 계획 및 최종 실행을 담당합니다.
+
+- **SigolSecurityProtocol:**  
+  데이터 무결성 확보를 위한 해시 처리, 로그 암호화 및 이상 징후 탐지 기능을 지원합니다.
+
+- **SigolProjectExecutor:**  
+  메타 컴퍼니, 의료 연구, 게임 개발 등 다양한 프로젝트를 실행할 수 있는 엔진을 제공합니다.
+
+- **DeterministicStateManager:**  
+  시스템 상태를 결정론적으로 관리하여, 현재 상태의 해시를 계산하고 추적합니다.
+
+## 설치 및 실행
+
+1. **요구 사항:**  
+   - Python 3.7 이상
+   - `asyncio`, `dataclasses` (Python 3.7 내장) 등 표준 라이브러리
+
+2. **설치:**  
+   저장소를 클론한 후, 아래 명령어로 필요한 라이브러리가 있다면 설치합니다.
+   ```bash
+   git clone https://github.com/sigolmater/-crazy.git
+   cd -crazy
+   pip install -r requirements.txt  # 필요한 경우
+   ```
+
+3. **실행:**  
+   예시 사용법은 `example_usage.py` 파일에 명시되어 있습니다. 아래와 같이 실행합니다.
+   ```bash
+   python example_usage.py
+   ```
+
+## 사용법
+
+- **지시사항 처리:**  
+  `SigolImperialAgent.process_directive(directive_id, input_data)` 메서드를 통해, 특정 지시사항을 실행하고 결과를 반환합니다. 예시:
+  ```python
+  result = await sigol_agent.process_directive("F-PO-01", {"command": "시스템 정렬 확인", "priority": "absolute"})
+  ```
+
+- **프로젝트 실행:**  
+  각 프로젝트 실행 모듈 (예: 메타컴퍼니, 의료 연구, 게임 개발)에서 정의한 메서드를 호출하여 다양한 작업을 수행할 수 있습니다.
+
+- **보안 및 로그 관리:**  
+  모든 지시사항 처리 과정에서 보안 로그가 기록되며, 이상 징후 감지 기능이 작동합니다.
+
+## 확장 및 기여
+
+시스템은 모듈화되어 있어, 새로운 지시사항이나 기능 추가가 용이합니다.  
+- 새로운 지시사항을 정의하려면 `SigolDirective` 객체를 추가하고, 관련 모듈에 필요한 기능을 구현하세요.
+- 자원 할당, 실행 엔진, 보안 프로토콜, 프로젝트 실행 등 각 모듈을 독립적으로 확장할 수 있습니다.
+
+## 라이선스
+
+[MIT 라이선스](LICENSE)를 따릅니다.
+
+---
+
+이 README를 기반으로 시스템 사용법과 구조를 명확히 이해하고, 필요에 따라 자신의 프로젝트 환경에 맞게 커스터마이징할 수 있습니다. 질문이나 추가 수정이 필요하면 언제든지 알려주세요.
