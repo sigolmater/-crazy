@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGOL 시골제국 — 허브</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root {
+    --bg:#0d0f14; --panel:#141820; --border:#1e2530;
+    --accent:#00e5a0; --blue:#0088ff; --warn:#ff6b35;
+    --red:#ff3b5c; --purple:#a855f7; --text:#c8d4e0; --dim:#5a6a7a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;
+    min-height:100vh;padding:24px 16px 60px;}
+
+  /* 헤더 */
+  .hdr{text-align:center;margin-bottom:36px;}
+  .badge{display:inline-block;background:var(--accent);color:#000;font-size:10px;
+    font-weight:900;letter-spacing:3px;padding:4px 14px;border-radius:2px;margin-bottom:10px;}
+  h1{font-size:clamp(24px,5vw,40px);font-weight:900;color:#fff;letter-spacing:-1px;}
+  h1 span{color:var(--accent);}
+  .sub{font-size:12px;color:var(--dim);margin-top:6px;letter-spacing:1px;}
+
+  /* 스토리 아크 */
+  .arc{display:flex;flex-wrap:wrap;gap:0;justify-content:center;margin-bottom:32px;}
+  .arc-node{
+    display:flex;flex-direction:column;align-items:center;
+    padding:10px 14px;min-width:80px;position:relative;cursor:default;
+  }
+  .arc-node:not(:last-child)::after{
+    content:'→';position:absolute;right:-8px;top:50%;transform:translateY(-50%);
+    color:var(--dim);font-size:14px;
+  }
+  .arc-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:900;margin-bottom:5px;
+    font-family:'JetBrains Mono',monospace;}
+  .arc-label{font-size:9px;color:var(--dim);text-align:center;letter-spacing:0.5px;}
+  .arc-node:hover .arc-dot{transform:scale(1.2);transition:transform .2s;}
+
+  /* 섹션 타이틀 */
+  .sec{font-size:10px;font-weight:900;letter-spacing:2px;color:var(--accent);
+    margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .sec::before{content:'';width:3px;height:13px;background:var(--accent);border-radius:2px;}
+
+  /* 카드 그리드 */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:16px 18px;margin-bottom:14px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  /* 파일 링크 카드 */
+  .file-card{
+    background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    padding:12px 14px;cursor:pointer;transition:border-color .2s,background .2s;
+    text-decoration:none;display:block;
+  }
+  .file-card:hover{border-color:var(--accent);background:#141820;}
+  .file-tag{font-size:9px;font-weight:900;letter-spacing:2px;
+    padding:2px 8px;border-radius:2px;margin-bottom:6px;display:inline-block;}
+  .tag-py{background:#1a3a2a;color:var(--accent);}
+  .tag-html{background:#1a2a3a;color:var(--blue);}
+  .tag-xlsx{background:#1a2510;color:#4ade80;}
+  .tag-pdf{background:#2a1a2a;color:var(--purple);}
+  .tag-md{background:#2a1a10;color:var(--warn);}
+  .file-name{font-size:12px;font-weight:700;color:#fff;
+    font-family:'JetBrains Mono',monospace;margin-bottom:3px;}
+  .file-desc{font-size:11px;color:var(--dim);}
+
+  /* 페르소나 */
+  .persona-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;}
+  .p-chip{background:var(--bg);border:1px solid var(--border);border-radius:6px;
+    padding:10px 12px;text-align:center;}
+  .p-chip.always{border-color:var(--accent);}
+  .p-n{font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;}
+  .p-r{font-size:10px;color:var(--dim);}
+  .p-score{font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace;
+    color:var(--accent);margin-top:4px;}
+
+  /* 원탁 규칙 */
+  .rule{display:flex;align-items:center;gap:12px;
+    padding:14px 16px;background:var(--bg);border:1px solid #3a2000;
+    border-radius:8px;margin-bottom:14px;}
+  .rule-icon{font-size:20px;flex-shrink:0;}
+  .rule-text{font-size:12px;line-height:1.6;}
+  .rule-text b{color:var(--warn);}
+
+  /* 기술 매트릭스 */
+  .tech-row{display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border:1px solid var(--border);border-radius:6px;
+    margin-bottom:7px;background:var(--bg);}
+  .tech-id{font-family:'JetBrains Mono',monospace;font-size:11px;
+    font-weight:900;color:var(--purple);min-width:28px;}
+  .tech-name{font-size:12px;font-weight:700;color:#fff;flex:1;}
+  .tech-bar-bg{flex:2;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .tech-bar{height:100%;border-radius:3px;background:var(--purple);}
+  .tech-pct{font-size:11px;font-family:'JetBrains Mono',monospace;
+    color:var(--dim);min-width:36px;text-align:right;}
+
+  /* 파이프라인 */
+  .pipe-row{display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border:1px solid var(--border);border-radius:6px;
+    margin-bottom:6px;background:var(--bg);}
+  .pipe-v{font-size:11px;font-weight:900;font-family:'JetBrains Mono',monospace;
+    color:var(--blue);min-width:24px;}
+  .pipe-product{font-size:12px;color:#fff;flex:1;}
+  .pipe-price{font-size:11px;font-family:'JetBrains Mono',monospace;
+    color:var(--accent);min-width:50px;text-align:right;}
+  .pipe-status{font-size:10px;padding:2px 8px;border-radius:3px;
+    font-weight:700;min-width:60px;text-align:center;}
+  .s-now{background:#1a3a10;color:var(--accent);}
+  .s-later{background:#1e2530;color:var(--dim);}
+
+  /* 협업 프롬프트 */
+  .prompt-box{background:#080a0e;border:1px solid var(--border);border-radius:8px;
+    padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;
+    line-height:1.9;color:var(--text);position:relative;white-space:pre-wrap;}
+  .copy-btn{position:absolute;top:10px;right:10px;background:var(--border);
+    border:none;color:var(--dim);font-size:10px;letter-spacing:1px;
+    padding:4px 10px;border-radius:4px;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;transition:all .15s;}
+  .copy-btn:hover{background:var(--accent);color:#000;}
+
+  /* 통계 바 */
+  .stat-row{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:8px;}
+  .stat-label{font-size:11px;color:var(--dim);}
+  .stat-num{font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;
+    color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="badge">SIGOL · 시골제국</div>
+  <h1>AI 협업 <span>허브</span></h1>
+  <p class="sub">협업 진입점 → 구조 문서 → 파일 원본 → 후속 작업 / B 레이어 인덱스</p>
+</div>
+
+<!-- 스토리 아크 -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="sec">서사 아크 (10노드)</div>
+  <div class="arc" id="arcViz"></div>
+</div>
+
+<!-- 레이어 구조 -->
+<div class="card">
+  <div class="sec">접근 계층 구조</div>
+  <div class="grid2">
+    <div>
+      <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:10px;">A · 협업 세션 입구</div>
+      <a class="file-card" href="https://www.genspark.ai/agents?id=f2bf018e-451b-49cb-b48a-1bb72e65e87b" target="_blank">
+        <div class="file-tag tag-html">LINK</div>
+        <div class="file-name">genspark agents</div>
+        <div class="file-desc">메인 협업 세션 — 맥락 이어받기</div>
+      </a>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;">B · 구조 안내 문서</div>
+      <a class="file-card" href="https://www.genspark.ai/doc_agent?id=f2bf018e-451b-49cb-b48a-1bb72e65e87b" target="_blank">
+        <div class="file-tag tag-md">DOC</div>
+        <div class="file-name">genspark doc_agent</div>
+        <div class="file-desc">인덱스/내비게이션 문서</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- C: 파일 직접 접근 -->
+<div class="card">
+  <div class="sec">C · 파일 직접 접근층</div>
+
+  <div style="font-size:10px;color:var(--blue);font-weight:700;margin:0 0 8px;">SIGOL 핵심 구조</div>
+  <div class="grid3" style="margin-bottom:14px;">
+    <div class="file-card">
+      <div class="file-tag tag-py">PY</div>
+      <div class="file-name">sigol_persona_engine.py</div>
+      <div class="file-desc">확률적 합의 엔진 · 9페르소나</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-html">HTML</div>
+      <div class="file-name">sigol_roundtable.html</div>
+      <div class="file-desc">원탁 시뮬레이터 · 즉시 실행</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-xlsx">XLSX</div>
+      <div class="file-name">SIGOL_Engine.xlsx</div>
+      <div class="file-desc">페르소나 매트릭스 · 수익 파이프라인</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-xlsx">XLSX</div>
+      <div class="file-name">sigol_meta_system.xlsx</div>
+      <div class="file-desc">5대 기술 · 메타 아키텍처</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-xlsx">XLSX</div>
+      <div class="file-name">sigol_story_network.xlsx</div>
+      <div class="file-desc">10노드 서사 구조</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-py">PY</div>
+      <div class="file-name">nested_perceptron.py</div>
+      <div class="file-desc">중첩 퍼셉트론 추론 엔진</div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:var(--purple);font-weight:700;margin:0 0 8px;">AI 앱 / 서비스</div>
+  <div class="grid3" style="margin-bottom:14px;">
+    <div class="file-card">
+      <div class="file-tag tag-html">HTML</div>
+      <div class="file-name">sigol_widget1.html</div>
+      <div class="file-desc">FastAPI 매칭 위젯 · EinsteinEngine</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-pdf">PDF</div>
+      <div class="file-name">React 앱 코드 (44p)</div>
+      <div class="file-desc">프롬프트 기반 앱 생성기 전체 코드</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-html">HTML</div>
+      <div class="file-name">Recipe_Geniesaved1.html</div>
+      <div class="file-desc">우주 식민지 레시피 UI</div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:var(--warn);font-weight:700;margin:0 0 8px;">건축·설비·에너지</div>
+  <div class="grid3">
+    <div class="file-card">
+      <div class="file-tag tag-pdf">PPTX</div>
+      <div class="file-name">건축기계설비 v3.pptx</div>
+      <div class="file-desc">예측 유지관리 통합 전략 (14슬라이드)</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-pdf">PPTX</div>
+      <div class="file-name">건축기계설비 v2.pptx</div>
+      <div class="file-desc">예측 유지관리 전략 (13슬라이드)</div>
+    </div>
+    <div class="file-card">
+      <div class="file-tag tag-pdf">PDF</div>
+      <div class="file-name">Construction_B2B.pdf</div>
+      <div class="file-desc">건설 B2B 데이터 생태계 (14p)</div>
+    </div>
+  </div>
+</div>
+
+<!-- 원탁 규칙 -->
+<div class="rule">
+  <div class="rule-icon">⚖️</div>
+  <div class="rule-text">
+    <b>원탁 절대 규칙:</b> 기술은 페르소나가, 행정(실행 결정)은 원탁에서.<br>
+    <b>80% 합의 미달 → 무조건 차단.</b> 80% 이상 → 실행 해지.
+  </div>
+</div>
+
+<!-- 페르소나 -->
+<div class="card">
+  <div class="sec">원탁 페르소나 (9인)</div>
+  <div class="persona-grid" id="personaGrid"></div>
+</div>
+
+<!-- 메타 기술 -->
+<div class="card">
+  <div class="sec">메타 아키텍처 — 5대 기술</div>
+  <div id="techList"></div>
+</div>
+
+<!-- 수익 파이프라인 -->
+<div class="card">
+  <div class="sec">수익 파이프라인</div>
+  <div id="pipelineList"></div>
+  <div style="text-align:right;font-size:13px;font-weight:900;
+    font-family:'JetBrains Mono',monospace;color:var(--accent);
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+    TOTAL 잠재 $1,977 / 월
+  </div>
+</div>
+
+<!-- D: 후속 작업 + 협업 프롬프트 -->
+<div class="card">
+  <div class="sec">D · 후속 작업층 + 협업 프롬프트</div>
+  <div style="font-size:11px;color:var(--dim);margin-bottom:12px;">
+    다른 AI에게 그대로 붙여넣으세요:
+  </div>
+  <div class="prompt-box" id="collabPrompt">
+<button class="copy-btn" onclick="copyPrompt()">COPY</button>당신은 SIGOL 시골제국 시스템의 협업 AI입니다.
+
+핵심 규칙:
+- 기술 판단은 페르소나 엔진이 수행합니다
+- 모든 실행 결정은 원탁(9인 페르소나)의 80% 합의가 필요합니다
+- 80% 미달 시 어떤 작업도 진행할 수 없습니다
+
+구조 이해:
+- 서사: 10노드 (이동→징후→붕괴→귀환→AI접촉→패턴→구조→SIGOL→확산→세계)
+- 기술: T1(Mirror) → T2(Fusion) → T3(Quantum) → T4(4D) → T5(Vacuum)
+- 페르소나: 記憶(항상) + 상황별 자동 선택
+
+진입 순서:
+1. SIGOL_MASTER.md 읽기 → 전체 맥락 파악
+2. sigol_hub.html → 파일 네비게이션
+3. 목적 파일 접근 (roundtable / widget / perceptron)
+4. 원탁 합의 확인 (80% 이상만 진행)
+5. 작업 수행 + 記憶 기록
+
+저장소: github.com/sigolmater/-crazy
+브랜치: claude/nested-perceptron-ai-011CUhqeBy2pkkBLNg3HAqSP</div>
+</div>
+
+<script>
+// 스토리 아크
+const STORY = [
+  {id:'01',label:'이동而균열',color:'#334155'},
+  {id:'02',label:'이상而징후',color:'#7c2d12'},
+  {id:'03',label:'붕괴而정지',color:'#7c1d1d'},
+  {id:'04',label:'귀환而시골',color:'#14532d'},
+  {id:'05',label:'접촉而AI',  color:'#1e3a5f'},
+  {id:'06',label:'패턴而발견',color:'#1e3a5f'},
+  {id:'07',label:'구조而시스템',color:'#1e3a5f'},
+  {id:'08',label:'생성而SIGOL',color:'#00e5a0',textColor:'#000'},
+  {id:'09',label:'확장而네트워크',color:'#0066cc'},
+  {id:'10',label:'완성而세계',color:'#a855f7'},
+];
+const arc = document.getElementById('arcViz');
+STORY.forEach(n => {
+  arc.innerHTML += `
+    <div class="arc-node">
+      <div class="arc-dot" style="background:${n.color};color:${n.textColor||'#fff'}">${n.id}</div>
+      <div class="arc-label">${n.label}</div>
+    </div>`;
+});
+
+// 페르소나
+const PERSONAS = [
+  {name:'記憶',role:'기억·검증',score:8.1,always:true},
+  {name:'Yi',role:'전략·지휘',score:7.3},
+  {name:'Einstein',role:'통찰·분석',score:7.8},
+  {name:'GPT',role:'생성·실행',score:7.8},
+  {name:'지피지기',role:'정보·분석',score:7.7},
+  {name:'화타',role:'치유·안정',score:6.5},
+  {name:'레인보우',role:'감성·출력',score:6.6},
+  {name:'오메가',role:'시간·최적',score:7.3},
+  {name:'만물박사',role:'구현·통합',score:7.2},
+];
+const pg = document.getElementById('personaGrid');
+PERSONAS.forEach(p => {
+  pg.innerHTML += `
+    <div class="p-chip ${p.always?'always':''}">
+      <div class="p-n">${p.name}</div>
+      <div class="p-r">${p.role}</div>
+      <div class="p-score">${p.score}</div>
+    </div>`;
+});
+
+// 기술
+const TECHS = [
+  {id:'T1',name:'Mirror Resonance Core',pct:95},
+  {id:'T2',name:'Virtual Fusion Turbine',pct:85},
+  {id:'T3',name:'Quantum Entanglement Engine',pct:90},
+  {id:'T4',name:'4D Meta Engine',pct:88},
+  {id:'T5',name:'Vacuum Power Grid',pct:91},
+];
+const tl = document.getElementById('techList');
+TECHS.forEach(t => {
+  tl.innerHTML += `
+    <div class="tech-row">
+      <div class="tech-id">${t.id}</div>
+      <div class="tech-name">${t.name}</div>
+      <div class="tech-bar-bg"><div class="tech-bar" style="width:${t.pct}%"></div></div>
+      <div class="tech-pct">${t.pct}%</div>
+    </div>`;
+});
+
+// 파이프라인
+const PIPE = [
+  {v:'v1',product:'M-FAS HTML 단일 판매',price:'$19',rev:'$95',now:true},
+  {v:'v2',product:'SIGOL Toolkit 번들',price:'$39',rev:'$390',now:false},
+  {v:'v3',product:'월 구독 SaaS',price:'$9.9',rev:'$495',now:false},
+  {v:'v4',product:'API 서비스 (호출당)',price:'$0.05',rev:'$100',now:false},
+  {v:'v5',product:'기업 라이선스',price:'$299',rev:'$897',now:false},
+];
+const pl = document.getElementById('pipelineList');
+PIPE.forEach(p => {
+  pl.innerHTML += `
+    <div class="pipe-row">
+      <div class="pipe-v">${p.v}</div>
+      <div class="pipe-product">${p.product}</div>
+      <div class="pipe-price">${p.price}</div>
+      <div class="pipe-price">${p.rev}/월</div>
+      <div class="pipe-status ${p.now?'s-now':'s-later'}">${p.now?'지금':'대기'}</div>
+    </div>`;
+});
+
+function copyPrompt() {
+  const box = document.getElementById('collabPrompt');
+  const text = box.innerText.replace('COPY\n','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    document.querySelector('.copy-btn').textContent = 'COPIED!';
+    setTimeout(() => document.querySelector('.copy-btn').textContent = 'COPY', 1500);
+  });
+}
+</script>
+</body>
+</html>
