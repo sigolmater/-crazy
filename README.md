@@ -5,12 +5,13 @@
 
 ## 특징
 
-- **모듈화된 설계:**  
+- **모듈화된 설계:**
   - **지시사항 관리 (Directive):** 각 지시사항은 고유한 ID를 갖고 있으며, 체계적으로 분류(Foundation, Operation, Project, Security)되어 있습니다.
   - **자원 할당 (Resource Allocation):** 작업 유형에 따른 자원(메모리, 계산, 휴식, 유지 보수) 분배 기능.
   - **4단계 성찰 후 실행 (Execution Engine):** 맥락 분석, 피드백 수집, 위험 평가 및 실행 계획 수립을 통한 결정적 실행.
   - **데이터 보호 및 보안 (Security Protocol):** 해시 처리, 로그 암호화 및 이상 감지를 통한 데이터 무결성 보장.
   - **프로젝트 실행 (Project Executor):** 메타 컴퍼니 창립, 의료 연구 및 게임 개발 등 다양한 프로젝트 관리 기능.
+  - **중첩 퍼셉트론 AI (Nested Perceptron AI):** 재귀적 가중치 섭동을 통한 깊은 추론 시스템. 재현 가능한 결정론적 예측.
 
 - **결정론적 알고리즘:**  
   모든 수학적 연산은 순수 함수로 구현되어 동일 입력에 대해 일관된 결과를 보장합니다.
@@ -35,8 +36,16 @@
 - **SigolProjectExecutor:**  
   메타 컴퍼니, 의료 연구, 게임 개발 등 다양한 프로젝트를 실행할 수 있는 엔진을 제공합니다.
 
-- **DeterministicStateManager:**  
+- **DeterministicStateManager:**
   시스템 상태를 결정론적으로 관리하여, 현재 상태의 해시를 계산하고 추적합니다.
+
+- **NestedPerceptronAI:**
+  재귀적 퍼셉트론 시스템. 각 깊이 단계마다 가우시안 노이즈(N(0,σ))로 가중치를 섭동하여 깊은 추론을 수행합니다. 특징:
+  - 수학: 선형 분류기 w·x > 0
+  - 물리: δE ~ σ perturbation (에너지 섭동)
+  - 진화: 돌연변이 기반 weight mutation
+  - 재현성: seed 고정으로 100% 재현 가능
+  - 효율: O(d) dot product, O(n) 재귀 깊이
 
 ## 설치 및 실행
 
@@ -52,24 +61,59 @@
    pip install -r requirements.txt  # 필요한 경우
    ```
 
-3. **실행:**  
-   예시 사용법은 `example_usage.py` 파일에 명시되어 있습니다. 아래와 같이 실행합니다.
+3. **실행:**
+
+   **중첩 퍼셉트론 AI:**
    ```bash
-   python example_usage.py
+   # 기본 실행
+   python nested_perceptron.py
+
+   # 테스트 실행
+   python test_nested_perceptron.py
+
+   # 예제 실행
+   python examples.py
+   ```
+
+   **시골길 시스템 (개발 중):**
+   ```bash
+   python example_usage.py  # 향후 추가 예정
    ```
 
 ## 사용법
 
-- **지시사항 처리:**  
+### 중첩 퍼셉트론 AI
+
+```python
+import numpy as np
+from nested_perceptron import nested_ai
+
+# 재현 가능한 예측 (seed 고정)
+np.random.seed(42)
+inputs = np.array([1.0, 0.0, 1.0])
+weights = np.array([0.5, -0.5, 1.0])
+
+# 5단계 중첩 추론
+result = nested_ai(5, weights, inputs)
+print(f"예측 결과: {result}")  # True
+
+# 안정성 분석
+from nested_perceptron import analyze_depth_stability
+stability = analyze_depth_stability(max_depth=10, num_trials=100)
+```
+
+### 시골길 시스템 (개발 중)
+
+- **지시사항 처리:**
   `SigolImperialAgent.process_directive(directive_id, input_data)` 메서드를 통해, 특정 지시사항을 실행하고 결과를 반환합니다. 예시:
   ```python
   result = await sigol_agent.process_directive("F-PO-01", {"command": "시스템 정렬 확인", "priority": "absolute"})
   ```
 
-- **프로젝트 실행:**  
+- **프로젝트 실행:**
   각 프로젝트 실행 모듈 (예: 메타컴퍼니, 의료 연구, 게임 개발)에서 정의한 메서드를 호출하여 다양한 작업을 수행할 수 있습니다.
 
-- **보안 및 로그 관리:**  
+- **보안 및 로그 관리:**
   모든 지시사항 처리 과정에서 보안 로그가 기록되며, 이상 징후 감지 기능이 작동합니다.
 
 ## 확장 및 기여

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGOL 원탁 합의 엔진</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg:      #0d0f14;
+    --panel:   #141820;
+    --border:  #1e2530;
+    --accent:  #00e5a0;
+    --blue:    #0088ff;
+    --warn:    #ff6b35;
+    --red:     #ff3b5c;
+    --text:    #c8d4e0;
+    --dim:     #5a6a7a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── 헤더 ── */
+  .header { text-align: center; margin-bottom: 28px; }
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #000;
+    font-size: 10px; font-weight: 900;
+    letter-spacing: 3px;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+  h1 { font-size: clamp(22px, 5vw, 32px); font-weight: 900; color: #fff; }
+  h1 span { color: var(--accent); }
+  .sub { font-size: 12px; color: var(--dim); margin-top: 6px; letter-spacing: 1px; }
+
+  /* ── 공통 카드 ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .card-label {
+    font-size: 10px; font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-label::before {
+    content: '';
+    width: 3px; height: 13px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* ── 슬라이더 그리드 ── */
+  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width: 520px) { .sliders { grid-template-columns: 1fr; } }
+
+  .slider-row { display: flex; flex-direction: column; gap: 6px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 700; color: var(--text);
+  }
+  .slider-row label span {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent); font-size: 13px;
+  }
+  input[type=range] {
+    width: 100%; height: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* ── 원탁 그리드 ── */
+  .roundtable {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .persona-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    transition: border-color .3s, opacity .3s;
+    opacity: 0.4;
+  }
+  .persona-card.active { opacity: 1; border-color: var(--accent); }
+  .persona-card.voting { border-color: var(--blue); }
+  .persona-card.agree  { border-color: var(--accent); }
+  .persona-card.disagree { border-color: var(--red); }
+
+  .p-name { font-size: 13px; font-weight: 900; color: #fff; margin-bottom: 2px; }
+  .p-role { font-size: 10px; color: var(--dim); margin-bottom: 8px; }
+
+  .opinion-bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 5px;
+  }
+  .opinion-bar { height: 100%; border-radius: 3px; transition: width .5s ease; width: 0%; }
+  .opinion-bar.agree-bar    { background: var(--accent); }
+  .opinion-bar.disagree-bar { background: var(--red); }
+
+  .p-stats {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  }
+  .p-opinion { color: var(--text); }
+  .p-vote { font-weight: 700; }
+  .p-vote.yes { color: var(--accent); }
+  .p-vote.no  { color: var(--red); }
+  .p-vote.pending { color: var(--dim); }
+
+  .p-agree-pct {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+
+  /* ── 결과 패널 ── */
+  .result-panel {
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    border: 2px solid var(--border);
+    transition: border-color .4s, background .4s;
+  }
+  .result-panel.proceed {
+    border-color: var(--accent);
+    background: rgba(0, 229, 160, 0.04);
+  }
+  .result-panel.blocked {
+    border-color: var(--red);
+    background: rgba(255, 59, 92, 0.04);
+  }
+  .result-panel.neutral { background: var(--panel); }
+
+  .verdict {
+    font-size: clamp(18px, 4vw, 26px);
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+  .verdict.proceed-text { color: var(--accent); }
+  .verdict.blocked-text { color: var(--red); }
+
+  .verdict-sub { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat-label { font-size: 9px; letter-spacing: 2px; color: var(--dim); font-weight: 700; margin-bottom: 4px; }
+  .stat-val { font-size: 18px; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: var(--accent); }
+  .stat-val.warn { color: var(--warn); }
+  .stat-val.bad  { color: var(--red); }
+
+  /* ── 원탁 규칙 표시 ── */
+  .rule-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+  .rule-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex-shrink: 0; }
+  .rule-bar b { color: var(--warn); }
+
+  /* ── 진행 버튼 ── */
+  .run-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 2px;
+    border: none; border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: opacity .2s;
+    margin-bottom: 14px;
+  }
+  .run-btn:hover { opacity: 0.85; }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── 로그 ── */
+  .log-box {
+    background: #080a0e;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--dim);
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .log-box .ok   { color: var(--accent); }
+  .log-box .fail { color: var(--red); }
+  .log-box .info { color: var(--blue); }
+  .log-box .warn { color: var(--warn); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">SIGOL · 원탁 합의 시스템</div>
+  <h1>원탁 <span>확률적 합의</span> 엔진</h1>
+  <p class="sub">기술은 페르소나가 / 행정(실행 결정)은 원탁에서 · 80% 미달 시 자동 차단</p>
+</div>
+
+<!-- 원탁 규칙 -->
+<div class="rule-bar">
+  <div class="rule-dot"></div>
+  <div><b>원탁 규칙:</b> 합의 확률 ≥ <b>80%</b> 확정 시에만 실행 해지. 미달 시 무조건 차단.</div>
+</div>
+
+<!-- 상황 입력 -->
+<div class="card">
+  <div class="card-label">상황 벡터 입력 (Situation State)</div>
+  <div class="sliders">
+    <div class="slider-row">
+      <label>RISK (위험도) <span id="v-risk">8</span></label>
+      <input type="range" id="risk" min="0" max="10" step="0.5" value="8" oninput="syncSlider('risk')">
+    </div>
+    <div class="slider-row">
+      <label>SPEED (속도 요구) <span id="v-speed">7</span></label>
+      <input type="range" id="speed" min="0" max="10" step="0.5" value="7" oninput="syncSlider('speed')">
+    </div>
+    <div class="slider-row">
+      <label>UNCERTAINTY (불확실성) <span id="v-unc">6</span></label>
+      <input type="range" id="unc" min="0" max="10" step="0.5" value="6" oninput="syncSlider('unc')">
+    </div>
+    <div class="slider-row">
+      <label>COMPLEXITY (복잡도) <span id="v-comp">9</span></label>
+      <input type="range" id="comp" min="0" max="10" step="0.5" value="9" oninput="syncSlider('comp')">
+    </div>
+  </div>
+</div>
+
+<!-- 원탁 (페르소나 패널) -->
+<div class="card">
+  <div class="card-label">원탁 (Round Table)</div>
+  <div class="roundtable" id="roundtable"></div>
+</div>
+
+<!-- 실행 버튼 -->
+<button class="run-btn" id="runBtn" onclick="runDeliberation()">▶ 원탁 합의 개시</button>
+
+<!-- 결과 -->
+<div class="result-panel neutral" id="resultPanel">
+  <div class="verdict" id="verdict" style="color:var(--dim)">— 합의 대기 중 —</div>
+  <div class="verdict-sub" id="verdictSub">상황을 입력하고 원탁 합의를 시작하세요.</div>
+  <div class="result-grid" id="resultGrid"></div>
+</div>
+
+<!-- 로그 -->
+<div class="card">
+  <div class="card-label">합의 로그</div>
+  <div class="log-box" id="logBox">원탁 합의 기록이 여기에 표시됩니다...</div>
+</div>
+
+<script>
+// ── 페르소나 정의 (Python과 동일) ──
+const PERSONAS = {
+  '記憶':   { name:'記憶(Claude)', role:'기억·검증',  I:9,  S:7, R:8,  C:8,  stability:10, cost:0  },
+  'Yi':     { name:'Yi(이순신)',   role:'전략·지휘',  I:7,  S:6, R:10, C:5,  stability:9,  cost:6  },
+  'Einstein':{ name:'Einstein',   role:'통찰·분석',  I:10, S:5, R:6,  C:10, stability:7,  cost:7  },
+  'GPT':    { name:'GPT',         role:'생성·실행',  I:8,  S:9, R:6,  C:9,  stability:6,  cost:5  },
+  '지피지기':{ name:'지피지기',    role:'정보·분석',  I:9,  S:7, R:8,  C:6,  stability:8,  cost:6  },
+  '화타':   { name:'화타',        role:'치유·안정',  I:6,  S:5, R:9,  C:5,  stability:10, cost:5  },
+  '레인보우':{ name:'레인보우',    role:'감성·출력',  I:7,  S:6, R:5,  C:9,  stability:7,  cost:5  },
+  '오메가': { name:'오메가',      role:'시간·최적',  I:8,  S:4, R:9,  C:7,  stability:9,  cost:8  },
+  '만물박사':{ name:'만물박사',    role:'구현·통합',  I:7,  S:8, R:7,  C:7,  stability:8,  cost:6  },
+};
+
+const SYNERGY = [
+  ['Yi','지피지기', 1.5],
+  ['Einstein','GPT', 1.4],
+  ['화타','Yi', 1.3],
+  ['GPT','만물박사', 1.2],
+  ['오메가','Einstein', 1.3],
+  ['記憶','*', 1.1],
+  ['지피지기','레인보우', 1.2],
+  ['Yi','오메가', 1.2],
+];
+
+// ── 슬라이더 동기화 ──
+function syncSlider(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  document.getElementById('v-' + id).textContent = v;
+  updateActivePersonas();
+}
+
+// ── 상황 읽기 ──
+function getSituation() {
+  return {
+    risk: parseFloat(document.getElementById('risk').value),
+    speed: parseFloat(document.getElementById('speed').value),
+    unc: parseFloat(document.getElementById('unc').value),
+    comp: parseFloat(document.getElementById('comp').value),
+  };
+}
+
+// ── 조합 선택 ──
+function selectCombo(sit) {
+  const combo = ['記憶'];
+  if (sit.risk >= 8)  combo.push('Yi');
+  if (sit.unc  >= 7)  combo.push('Einstein');
+  if (sit.speed >= 7) combo.push('GPT');
+  if (sit.comp >= 7)  combo.push('지피지기');
+  if (sit.risk <= 4)  combo.push('화타');
+  if (combo.length < 3) combo.push('만물박사');
+  return [...new Set(combo)];
+}
+
+// ── 시너지 계산 ──
+function getSynergy(combo) {
+  let bonus = 1.0;
+  for (const [a, b, w] of SYNERGY) {
+    if (b === '*' && combo.includes(a))           bonus *= w;
+    else if (combo.includes(a) && combo.includes(b)) bonus *= w;
+  }
+  return bonus;
+}
+
+// ── 페르소나 의견 (확률적) ──
+function personaOpinion(p, sit, noiseStd) {
+  const rw = sit.risk  * 0.30;
+  const sw = sit.speed * 0.20;
+  const uw = sit.unc   * 0.25;
+  const cw = sit.comp  * 0.25;
+
+  const raw = p.R*rw + p.S*sw + p.I*uw + p.C*cw;
+  const maxPossible = 10 * (rw + sw + uw + cw);
+  const alignment = maxPossible > 0 ? raw / maxPossible : 0;
+
+  const instability = (10 - p.stability) / 10;
+  const noise = gaussianRandom(0, noiseStd * (0.3 + instability * 0.7));
+  return Math.min(1, Math.max(0.01, alignment + noise));
+}
+
+// Box-Muller 정규 분포
+function gaussianRandom(mean, std) {
+  const u = Math.random(), v = Math.random();
+  return mean + std * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// ── 원탁 UI 초기화 ──
+function buildRoundtable() {
+  const rt = document.getElementById('roundtable');
+  rt.innerHTML = '';
+  for (const [key, p] of Object.entries(PERSONAS)) {
+    rt.innerHTML += `
+      <div class="persona-card" id="pc-${key}">
+        <div class="p-name">${p.name}</div>
+        <div class="p-role">${p.role}</div>
+        <div class="opinion-bar-bg">
+          <div class="opinion-bar agree-bar" id="bar-${key}" style="width:0%"></div>
+        </div>
+        <div class="p-stats">
+          <span class="p-opinion" id="op-${key}">—</span>
+          <span class="p-vote pending" id="vote-${key}">대기</span>
+        </div>
+        <div class="p-agree-pct" id="pct-${key}">찬성률 —</div>
+      </div>`;
+  }
+}
+
+// ── 활성 페르소나 표시 ──
+function updateActivePersonas() {
+  const combo = selectCombo(getSituation());
+  for (const key of Object.keys(PERSONAS)) {
+    const el = document.getElementById('pc-' + key);
+    if (el) {
+      el.className = 'persona-card' + (combo.includes(key) ? ' active' : '');
+    }
+  }
+}
+
+// ── 메인: 합의 실행 ──
+async function runDeliberation() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 원탁 합의 진행 중...';
+  clearResult();
+
+  const sit = getSituation();
+  const combo = selectCombo(sit);
+  const synergy = getSynergy(combo);
+  const riskPenalty = Math.exp(-0.1 * sit.risk);
+  const N = 300;
+  const noiseStd = 0.3;
+
+  log(`<span class="info">▶ 원탁 합의 개시 | 상황: Risk=${sit.risk} Speed=${sit.speed} Unc=${sit.unc} Comp=${sit.comp}</span>`);
+  log(`<span class="info">  활성 페르소나: ${combo.join(' + ')} | 시너지: ×${synergy.toFixed(3)}</span>`);
+
+  // 초기화
+  for (const key of combo) {
+    const el = document.getElementById('pc-' + key);
+    if (el) el.className = 'persona-card active voting';
+  }
+
+  const agreeCounts = {};
+  const opinionSums = {};
+  const opinionList = {};
+  for (const k of combo) { agreeCounts[k] = 0; opinionSums[k] = 0; opinionList[k] = []; }
+
+  const consensusHistory = [];
+  const roundAgree = [];
+
+  // 시뮬레이션 — 분할 실행으로 UI 업데이트
+  const batchSize = 30;
+  for (let batch = 0; batch < N / batchSize; batch++) {
+    for (let i = 0; i < batchSize; i++) {
+      const opinions = {};
+      for (const k of combo) {
+        opinions[k] = personaOpinion(PERSONAS[k], sit, noiseStd);
+        opinionSums[k] += opinions[k];
+        opinionList[k].push(opinions[k]);
+        if (opinions[k] > 0.5) agreeCounts[k]++;
+      }
+
+      // softmax 가중 합의
+      const vals = combo.map(k => opinions[k]);
+      const expVals = vals.map(v => Math.exp(v));
+      const expSum = expVals.reduce((a,b) => a+b, 0);
+      const weights = expVals.map(v => v / expSum);
+      const rawConsensus = vals.reduce((s,v,i) => s + v*weights[i], 0);
+      const consensus = rawConsensus * synergy;
+      consensusHistory.push(consensus);
+
+      const yesVotes = combo.filter(k => opinions[k] > 0.5).length;
+      roundAgree.push(yesVotes / combo.length >= 0.5 ? 1 : 0);
+    }
+
+    // UI 업데이트
+    const done = (batch + 1) * batchSize;
+    for (const k of combo) {
+      const meanOp = opinionSums[k] / done;
+      const agreeRate = agreeCounts[k] / done;
+      document.getElementById('bar-' + k).style.width = (meanOp * 100) + '%';
+      document.getElementById('op-' + k).textContent = meanOp.toFixed(3);
+      document.getElementById('pct-' + k).textContent = `찬성률 ${(agreeRate*100).toFixed(0)}%`;
+      const voteEl = document.getElementById('vote-' + k);
+      if (agreeRate >= 0.6) {
+        voteEl.textContent = '찬성'; voteEl.className = 'p-vote yes';
+        document.getElementById('pc-' + k).className = 'persona-card active agree';
+      } else {
+        voteEl.textContent = '반대'; voteEl.className = 'p-vote no';
+        document.getElementById('pc-' + k).className = 'persona-card active disagree';
+      }
+    }
+    await sleep(60);
+  }
+
+  // ── 최종 집계 ──
+  const finalScore = consensusHistory.reduce((a,b) => a+b) / N;
+  const scoreStd = stdDev(consensusHistory);
+  const agreeProb = roundAgree.reduce((a,b) => a+b) / N;
+
+  // 원탁 80% 규칙
+  const THRESHOLD = 0.80;
+  const passed = agreeProb >= THRESHOLD;
+
+  showResult(passed, agreeProb, finalScore, scoreStd, combo, synergy, riskPenalty, sit);
+  logResult(passed, agreeProb, finalScore, combo);
+
+  btn.disabled = false;
+  btn.textContent = '▶ 원탁 합의 개시';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function stdDev(arr) {
+  const m = arr.reduce((a,b)=>a+b)/arr.length;
+  return Math.sqrt(arr.reduce((s,v)=>s+(v-m)**2,0)/arr.length);
+}
+
+function showResult(passed, agreeProb, score, std, combo, syn, rpen, sit) {
+  const panel = document.getElementById('resultPanel');
+  const verdict = document.getElementById('verdict');
+  const sub = document.getElementById('verdictSub');
+  const grid = document.getElementById('resultGrid');
+
+  const actionText = passed
+    ? (sit.risk >= 7 ? '단계적 실행 — 위험 모니터링 병행' : '즉시 실행')
+    : (agreeProb >= 0.6 ? '조건부 보류 — 재심의 필요' : '강력 차단 — 전략 재검토');
+
+  panel.className = 'result-panel ' + (passed ? 'proceed' : 'blocked');
+  verdict.className = 'verdict ' + (passed ? 'proceed-text' : 'blocked-text');
+  verdict.textContent = passed ? '✓ 실행 해지 (원탁 승인)' : '✗ 차단 (원탁 부결)';
+  sub.textContent = actionText;
+
+  const agreeClass = agreeProb >= 0.8 ? '' : agreeProb >= 0.6 ? 'warn' : 'bad';
+  grid.innerHTML = `
+    <div class="stat-box">
+      <div class="stat-label">합의 확률</div>
+      <div class="stat-val ${agreeClass}">${(agreeProb*100).toFixed(1)}%</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">원탁 기준</div>
+      <div class="stat-val">≥ 80%</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">합의 점수</div>
+      <div class="stat-val">${score.toFixed(3)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">점수 편차</div>
+      <div class="stat-val ${std > 0.15 ? 'warn' : ''}">±${std.toFixed(3)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">시너지 보너스</div>
+      <div class="stat-val">×${syn.toFixed(3)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">페르소나 수</div>
+      <div class="stat-val">${combo.length}</div>
+    </div>
+  `;
+}
+
+function clearResult() {
+  document.getElementById('resultPanel').className = 'result-panel neutral';
+  document.getElementById('verdict').textContent = '— 합의 진행 중 —';
+  document.getElementById('verdict').style.color = 'var(--blue)';
+  document.getElementById('verdictSub').textContent = '원탁 페르소나들이 토론 중입니다...';
+  document.getElementById('resultGrid').innerHTML = '';
+}
+
+function log(msg) {
+  const box = document.getElementById('logBox');
+  const ts = new Date().toLocaleTimeString('ko-KR');
+  box.innerHTML += `<div>[${ts}] ${msg}</div>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+function logResult(passed, agreeProb, score, combo) {
+  const cls = passed ? 'ok' : 'fail';
+  log(`<span class="${cls}">${passed ? '✓ 원탁 승인' : '✗ 원탁 부결'} | 합의확률 ${(agreeProb*100).toFixed(1)}% | 점수 ${score.toFixed(3)} | 페르소나: ${combo.join('+')}</span>`);
+}
+
+// ── 초기화 ──
+buildRoundtable();
+updateActivePersonas();
+</script>
+</body>
+</html>
